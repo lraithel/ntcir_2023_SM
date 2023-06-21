@@ -1,4 +1,5 @@
-# NTCIR'17 Social Media Subtask (Adverse Drug Event detection for social media texts in Japanese, English, German, and French)
+# NTCIR'17 Social Media Subtask
+## Adverse Drug Event detection for social media texts in Japanese, English, German, and French
 
 The following measure are used, mostly based ob the scikit-learn library:
 
@@ -13,7 +14,10 @@ The following measure are used, mostly based ob the scikit-learn library:
 
 
 
-Run the script like this:
+The predictions file is expected to have the exact same structure as the train data file.
+Install the necessary libraries and run the script like so:
+
+`pip install -r requirements.txt`
 
 `python evaluate_ntcir_2023.py -gold_file gold.csv -prediction_file pred.csv`
 

@@ -127,7 +127,25 @@ def get_per_class_scores(gold_df, pred_df, to_csv=True):
     golds = gold_df.values.tolist()
     preds = pred_df.values.tolist()
 
-    print(classification_report(golds, preds, target_names=classes, zero_division=0))
+    # create weighing
+    # weights = []
+    # for i in range(len(golds)):
+    #     if sum(golds[i]) == 0:
+    #         weights.append(0)
+    #     else:
+    #         weights.append(1)
+
+    print(
+        classification_report(
+            golds,
+            preds,
+            target_names=classes,
+            zero_division=0,
+            # sample_weight=len(golds) * [1],  # weigh every example the same
+            # sample_weight=weights,  # weigh samples with at least one symptom with 1, others with 0
+            sample_weight=None,  # "no weighting", i.e. giving each sample the same weight; seems to be the same as ignoring all samples without positive predictions but dividing by all samples nevertheless
+        )
+    )
 
     if to_csv:
         merged_df.to_csv("overview_predictions_per_class.csv")
@@ -217,6 +235,10 @@ def main(gold_csv, pred_csv):
     """
     gold_df = load_data(gold_csv)
     pred_df = load_data(pred_csv)
+
+    assert len(gold_df) == len(
+        pred_df
+    ), "#gold samples does not match #predicted samples"
 
     print(
         "\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nBinary Scores (ADE vs. no ADE):\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
