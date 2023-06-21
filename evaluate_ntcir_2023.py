@@ -167,11 +167,11 @@ def get_binary_scores(gold_df, pred_df, to_csv=True):
     # add total of counts
     merged_binary_df.loc["Total"] = merged_binary_df.sum(numeric_only=True)
 
-    print(f"Confusion matrix:\n{confusion_matrix(golds, preds)}")
+    # print(f"Confusion matrix:\n{confusion_matrix(golds, preds)}")
 
     print(
         classification_report(
-            golds, preds, labels=[0, 1], target_names=["no ADR", "ADR"], zero_division=0
+            golds, preds, labels=[0, 1], target_names=["no ADE", "ADE"], zero_division=0
         )
     )
 
@@ -179,7 +179,7 @@ def get_binary_scores(gold_df, pred_df, to_csv=True):
         merged_binary_df.to_csv("overview_predictions_binary.csv")
 
 
-def get_balanced_accuracy(gold_df, pred_df):
+def get_per_label_scores(gold_df, pred_df):
     """..."""
 
     gold_df = drop_non_class_cols(gold_df)
@@ -189,63 +189,52 @@ def get_balanced_accuracy(gold_df, pred_df):
     golds = gold_df.values.tolist()
     preds = pred_df.values.tolist()
 
-    # full
+    golds_flat = [item for sublist in golds for item in sublist]
+    preds_flat = [item for sublist in preds for item in sublist]
 
-    gold_wo1 = len(golds)
-    balanced_acc = 0
-    acc_0, acc_1 = 0, 0
+    print(classification_report(golds_flat, preds_flat, labels=[0, 1], zero_division=0))
+
     exact_match = 0
 
     for i in range(len(golds)):
-        # balanced_acc
-        balanced_acc += balanced_accuracy_score(golds[i], preds[i])
-        # acc_0
-        acc_0 += recall_score(golds[i], preds[i], average=None, zero_division=0)[0]
-        # acc_1
-        try:
-            acc_1 += recall_score(golds[i], preds[i], average=None, zero_division=0)[1]
-        except:
-            gold_wo1 -= 1
-
-        # exact match
         if golds[i] == preds[i]:
             exact_match += 1
 
-    if gold_wo1 == 0:
-        acc_1_overall = 0
-
-    else:
-        acc_1_overall = acc_1 / gold_wo1
-
-    print("acc_0: {}".format(acc_0 / len(golds)))
-    print("acc_1: {}".format(acc_1_overall))
-    print("balanced_acc: {}".format(balanced_acc / len(golds)))
-    print("Percentage of matches (exact_acc): {}".format(exact_match / len(golds)))
-    # balanced_acc is averaging, so if example has gold=[0,0,0], we only consider the acc_0
-    # applying to the same logic, we only averaging accross the examples having 1
+    print(f"Exact accuracy: {exact_match / len(golds)}\n")
 
 
 def main(gold_csv, pred_csv):
-    """..."""
-    gold_df = load_data(gold_csv)  # .values.tolist()
-    pred_df = load_data(pred_csv)  # .values.tolist()
+    """Calculate the different scores.
+
+    Binary: Calculates the performance of classifying a document into the classes
+            "contains ADE" vs. "does not contain ADE". A document is considered
+            to contain an ADE if a least one symptom (class) is positive (1).
+    Per class: Calculates precision, recall and F1 score for each class (symptom)
+    Exact match accuracy: Calculates the percentage of exact matches across all
+                          samples.
+    (Full) per label : Calculates precision, recall and F1 score for each label
+                       (0 and 1) across samples and classes.
+    """
+    gold_df = load_data(gold_csv)
+    pred_df = load_data(pred_csv)
 
     print(
-        "\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nBinary Scores:\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+        "\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nBinary Scores (ADE vs. no ADE):\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
     )
 
     get_binary_scores(gold_df, pred_df)
 
     print(
-        "\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nPer Class Scores:\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+        "\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n(Individual) Per Class Scores:\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
     )
 
     get_per_class_scores(gold_df, pred_df)
 
     print(
-        "\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nBalanced Accuracy:\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+        "\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n(Full) Per Label Scores:\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
     )
-    get_balanced_accuracy(gold_df, pred_df)
+
+    get_per_label_scores(gold_df, pred_df)
 
 
 if __name__ == "__main__":
