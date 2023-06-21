@@ -121,7 +121,7 @@ def get_binary_scores(gold_df, pred_df, to_csv=True):
         merged_binary_df.to_csv("overview_predictions_binary.csv")
 
 
-def get_balanced_accuracy(gold_df, pred_df):
+def get_per_label_scores(gold_df, pred_df):
     """..."""
 
     gold_df = drop_non_class_cols(gold_df)
@@ -130,42 +130,23 @@ def get_balanced_accuracy(gold_df, pred_df):
     # get only the labels
     golds = gold_df.values.tolist()
     preds = pred_df.values.tolist()
+    
+    golds_flat = [item for sublist in golds for item in sublist]
+    preds_flat = [item for sublist in preds for item in sublist]
 
-    # full
+    print(
+        classification_report(
+            golds_flat, preds_flat, labels=[0, 1], zero_division=0
+        )
+    )
 
-    gold_wo1 = len(golds)
-    balanced_acc = 0
-    acc_0, acc_1 = 0, 0
     exact_match = 0
 
     for i in range(len(golds)):
-        # balanced_acc
-        balanced_acc += balanced_accuracy_score(golds[i], preds[i])
-        # acc_0
-        acc_0 += recall_score(golds[i], preds[i], average=None, zero_division=0)[0]
-        # acc_1
-        try:
-            acc_1 += recall_score(golds[i], preds[i], average=None, zero_division=0)[1]
-        except:
-            gold_wo1 -= 1
-
-        # exact match
         if golds[i] == preds[i]:
             exact_match += 1
 
-    if gold_wo1 == 0:
-        acc_1_overall = 0
-
-    else:
-        acc_1_overall = acc_1 / gold_wo1
-
-    print("acc_0: {}".format(acc_0 / len(golds)))
-    print("acc_1: {}".format(acc_1_overall))
-    print("balanced_acc: {}".format(balanced_acc / len(golds)))
-    print("exact_acc: {}".format(exact_match / len(golds)))
-    # balanced_acc is averaging, so if example has gold=[0,0,0], we only consider the acc_0
-    # applying to the same logic, we only averaging accross the examples having 1
-
+    print("Exact accuracy: {}".format(exact_match / len(golds)))
 
 def main(gold_csv, pred_csv):
     """..."""
@@ -176,12 +157,12 @@ def main(gold_csv, pred_csv):
 
     get_binary_scores(gold_df, pred_df)
 
-    print("\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nPer Class Scores:")
+    print("\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n(Individual) Per Class Scores:")
 
     get_per_class_scores(gold_df, pred_df)
 
-    print("\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nBalanced Accuracy:")
-    get_balanced_accuracy(gold_df, pred_df)
+    print("\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n(Full) Per Label Scores:")
+    get_per_label_scores(gold_df, pred_df)
 
 
 if __name__ == "__main__":
