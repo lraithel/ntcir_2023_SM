@@ -176,7 +176,12 @@ def get_binary_scores(gold_df, pred_df, to_csv=True):
 
     # merge the "content" and the binary labels for a better analysis
     merged_binary_df = pd.concat(
-        [content_df, gold_df["binary_gold"], pred_df["binary_pred"]], axis=1
+        [
+            content_df.reset_index(drop=True),
+            gold_df["binary_gold"].reset_index(drop=True),
+            pred_df["binary_pred"].reset_index(drop=True),
+        ],
+        axis=1,
     )
 
     # add counts per (binary) label
