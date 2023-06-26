@@ -233,8 +233,8 @@ def main(gold_csv, pred_csv):
     (Full) per label : Calculates precision, recall and F1 score for each label
                        (0 and 1) across samples and classes.
     """
-    gold_df = load_data(gold_csv)
-    pred_df = load_data(pred_csv)
+    gold_df = load_data(gold_csv).sort_values(by="train_id")
+    pred_df = load_data(pred_csv).sort_values(by="train_id")
 
     assert len(gold_df) == len(
         pred_df
