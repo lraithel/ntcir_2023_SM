@@ -21,37 +21,42 @@ Authors: Hui-Syuan Yeh, Lisa Raithel
 
 
 def convert_to_binary(row):
+    """Covert one row of labels to one binary label."""
     if sum(row) >= 1:
         return 1
     return 0
 
 
 def count_tns_bin(row):
+    """Count the true negatives (binary)."""
     if row["binary_gold"] == 0 and row["binary_pred"] == 0:
         return 1
     return 0
 
 
 def count_tps_bin(row):
+    """Count the true positives (binary)."""
     if row["binary_gold"] == 1 and row["binary_pred"] == 1:
         return 1
     return 0
 
 
 def count_fps_bin(row):
+    """Count the false positives (binary)."""
     if row["binary_gold"] == 0 and row["binary_pred"] == 1:
         return 1
     return 0
 
 
 def count_fns_bin(row):
+    """Count the false negatives (binary)."""
     if row["binary_gold"] == 1 and row["binary_pred"] == 0:
         return 1
     return 0
 
 
 def count_tps(row, classes):
-    """..."""
+    """Count the true positives per class."""
     tps = 0
     for class_ in classes:
         if row[class_ + "_gold"] == 1 and row[class_ + "_pred"] == 1:
@@ -61,7 +66,7 @@ def count_tps(row, classes):
 
 
 def count_fps(row, classes):
-    """..."""
+    """Count the false positives per class."""
     fps = 0
     for class_ in classes:
         if row[class_ + "_gold"] == 0 and row[class_ + "_pred"] == 1:
@@ -71,7 +76,7 @@ def count_fps(row, classes):
 
 
 def count_tns(row, classes):
-    """..."""
+    """Count the true negatives per class."""
     tns = 0
     for class_ in classes:
         if row[class_ + "_gold"] == 0 and row[class_ + "_pred"] == 0:
@@ -81,7 +86,7 @@ def count_tns(row, classes):
 
 
 def count_fns(row, classes):
-    """..."""
+    """Count the false negatives per class."""
     fns = 0
     for class_ in classes:
         if row[class_ + "_gold"] == 1 and row[class_ + "_pred"] == 0:
@@ -91,7 +96,7 @@ def count_fns(row, classes):
 
 
 def load_data(file_name):
-    """Load a CSV file into a pandas dataframe and return the predictions."""
+    """Load a CSV file into a pandas data frame and return the predictions."""
     return pd.read_csv(file_name, sep=",")
 
 
@@ -101,7 +106,7 @@ def drop_non_class_cols(df):
 
 
 def get_per_class_scores(gold_df, pred_df, to_csv=True):
-    """..."""
+    """Calculate scores per class (symptom)."""
     content_df = gold_df.filter(items=["train_id", "text"])
     # get rid of train ID and text for a cleaner overview
     gold_df = drop_non_class_cols(gold_df)
@@ -117,6 +122,7 @@ def get_per_class_scores(gold_df, pred_df, to_csv=True):
     # merged_df = pd.concat([content_df, gold_df, pred_df], axis=1)
     merged_df = pd.concat([gold_df, pred_df], axis=1)
 
+    # add counts per class
     merged_df["#TPs"] = merged_df.apply(count_tps, axis=1, args=(classes,))
     merged_df["#FPs"] = merged_df.apply(count_fps, axis=1, args=(classes,))
     merged_df["#TNs"] = merged_df.apply(count_tns, axis=1, args=(classes,))
@@ -173,6 +179,7 @@ def get_binary_scores(gold_df, pred_df, to_csv=True):
         [content_df, gold_df["binary_gold"], pred_df["binary_pred"]], axis=1
     )
 
+    # add counts per (binary) label
     merged_binary_df["#TPs"] = merged_binary_df.apply(count_tps_bin, axis=1)
     merged_binary_df["#FPs"] = merged_binary_df.apply(count_fps_bin, axis=1)
     merged_binary_df["#TNs"] = merged_binary_df.apply(count_tns_bin, axis=1)
@@ -198,7 +205,7 @@ def get_binary_scores(gold_df, pred_df, to_csv=True):
 
 
 def get_per_label_scores(gold_df, pred_df):
-    """..."""
+    """Calculate scores per label (0 vs. 1) across samples and classes."""
 
     gold_df = drop_non_class_cols(gold_df)
     pred_df = drop_non_class_cols(pred_df)
