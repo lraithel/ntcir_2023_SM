@@ -119,8 +119,17 @@ def get_per_class_scores(gold_df, pred_df, to_csv=True):
 
     # Concatenate the gold and prediction dataframes.
     # you can also add the IDs and texts for a better analysis:
-    # merged_df = pd.concat([content_df, gold_df, pred_df], axis=1)
-    merged_df = pd.concat([gold_df, pred_df], axis=1)
+    # merged_df = pd.concat(
+    #     [
+    #         content_df.reset_index(drop=True),
+    #         gold_df.reset_index(drop=True),
+    #         pred_df.reset_index(drop=True),
+    #     ],
+    #     axis=1,
+    # )
+    merged_df = pd.concat(
+        [gold_df.reset_index(drop=True), pred_df.reset_index(drop=True)], axis=1
+    )
 
     # add counts per class
     merged_df["#TPs"] = merged_df.apply(count_tps, axis=1, args=(classes,))
