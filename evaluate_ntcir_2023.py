@@ -8,6 +8,8 @@ from sklearn.metrics import f1_score
 from sklearn.metrics import precision_recall_fscore_support
 from sklearn.metrics import recall_score
 
+from datetime import datetime
+
 
 import numpy as np
 
@@ -18,6 +20,9 @@ Evaluation script for the NTCIR'17 Social Media Shared Task
 Authors: Hui-Syuan Yeh, Lisa Raithel
 
 """
+
+ID_COL = "test_id"
+TS = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
 
 
 def convert_to_binary(row):
@@ -102,12 +107,12 @@ def load_data(file_name):
 
 def drop_non_class_cols(df):
     """Drop all columns that do not contain class names."""
-    return df.drop(columns=["train_id", "text"])
+    return df.drop(columns=[ID_COL, "text"])
 
 
 def get_per_class_scores(gold_df, pred_df, to_csv=True):
     """Calculate scores per class (symptom)."""
-    content_df = gold_df.filter(items=["train_id", "text"])
+    content_df = gold_df.filter(items=[ID_COL, "text"])
     # get rid of train ID and text for a cleaner overview
     gold_df = drop_non_class_cols(gold_df)
     # get the class names
@@ -163,7 +168,9 @@ def get_per_class_scores(gold_df, pred_df, to_csv=True):
     )
 
     if to_csv:
-        merged_df.to_csv("overview_predictions_per_class.csv")
+        file_name = f"overview_predictions_per_class_{TS}.csv"
+        print(f"Created CSV file '{file_name}' for further analysis.")
+        merged_df.to_csv(file_name)
 
 
 def get_binary_scores(gold_df, pred_df, to_csv=True):
@@ -174,7 +181,7 @@ def get_binary_scores(gold_df, pred_df, to_csv=True):
     """
 
     # create a separate dataframe for the content (not needed for scores)
-    content_df = gold_df.filter(items=["train_id", "text"])
+    content_df = gold_df.filter(items=[ID_COL, "text"])
 
     gold_df = drop_non_class_cols(gold_df)
     pred_df = drop_non_class_cols(pred_df)
@@ -215,7 +222,9 @@ def get_binary_scores(gold_df, pred_df, to_csv=True):
     )
 
     if to_csv:
-        merged_binary_df.to_csv("overview_predictions_binary.csv")
+        file_name = f"overview_predictions_binary_{TS}.csv"
+        print(f"Created CSV file '{file_name}' for further analysis.")
+        merged_binary_df.to_csv(file_name)
 
 
 def get_per_label_scores(gold_df, pred_df):
@@ -242,7 +251,7 @@ def get_per_label_scores(gold_df, pred_df):
     print(f"Exact accuracy: {exact_match / len(golds)}\n")
 
 
-def main(gold_csv, pred_csv):
+def main(gold_csv, pred_csv, csv_output):
     """Calculate the different scores.
 
     Binary: Calculates the performance of classifying a document into the classes
@@ -254,8 +263,8 @@ def main(gold_csv, pred_csv):
     (Full) per label : Calculates precision, recall and F1 score for each label
                        (0 and 1) across samples and classes.
     """
-    gold_df = load_data(gold_csv).sort_values(by="train_id")
-    pred_df = load_data(pred_csv).sort_values(by="train_id")
+    gold_df = load_data(gold_csv).sort_values(by=ID_COL)
+    pred_df = load_data(pred_csv).sort_values(by=ID_COL)
 
     assert len(gold_df) == len(
         pred_df
@@ -265,13 +274,13 @@ def main(gold_csv, pred_csv):
         "\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nBinary Scores (ADE vs. no ADE):\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
     )
 
-    get_binary_scores(gold_df, pred_df)
+    get_binary_scores(gold_df, pred_df, to_csv=csv_output)
 
     print(
         "\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n(Individual) Per Class Scores:\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
     )
 
-    get_per_class_scores(gold_df, pred_df)
+    get_per_class_scores(gold_df, pred_df, to_csv=csv_output)
 
     print(
         "\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n(Full) Per Label Scores:\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
@@ -285,7 +294,12 @@ if __name__ == "__main__":
 
     parser.add_argument("-gold_file", default=None, type=str)
     parser.add_argument("-prediction_file", default=None, type=str)
+    parser.add_argument("--csv_output", action="store_true")
 
     args = parser.parse_args()
 
-    main(gold_csv=args.gold_file, pred_csv=args.prediction_file)
+    main(
+        gold_csv=args.gold_file,
+        pred_csv=args.prediction_file,
+        csv_output=args.csv_output,
+    )
