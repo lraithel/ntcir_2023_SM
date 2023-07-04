@@ -21,7 +21,8 @@ Authors: Hui-Syuan Yeh, Lisa Raithel
 
 """
 
-ID_COL = "test_id"
+ID_COL = "train_id"
+
 TS = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
 
 
@@ -263,8 +264,17 @@ def main(gold_csv, pred_csv, csv_output):
     (Full) per label : Calculates precision, recall and F1 score for each label
                        (0 and 1) across samples and classes.
     """
-    gold_df = load_data(gold_csv).sort_values(by=ID_COL)
-    pred_df = load_data(pred_csv).sort_values(by=ID_COL)
+    try:
+        gold_df = load_data(gold_csv).sort_values(by=ID_COL)
+        pred_df = load_data(pred_csv).sort_values(by=ID_COL)
+
+    except KeyError as e:
+        print(
+            """\nMost likely the ID column of the input data is not correct. """
+            """Either change ID_COL at the top of the script or your input """
+            """data's ID column.\n"""
+        )
+        raise e
 
     assert len(gold_df) == len(
         pred_df

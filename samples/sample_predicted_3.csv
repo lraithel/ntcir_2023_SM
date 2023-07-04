@@ -1,4 +1,4 @@
-test_id,text,C0027497:nausea,C0011991:diarrhea,C0015672:fatigue
+train_id,text,C0027497:nausea,C0011991:diarrhea,C0015672:fatigue
 1058,Tweet 1,0,0,0
 1120,Tweet 2,0,0,0
 2770,Tweet 3,0,0,0
